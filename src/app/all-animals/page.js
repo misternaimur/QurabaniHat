@@ -57,6 +57,7 @@ export default function AllAnimalsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
 
@@ -108,12 +109,25 @@ export default function AllAnimalsPage() {
     });
   }, [animals, selectedCategories, search]);
 
+  const sortedAnimals = useMemo(() => {
+    const animalsCopy = [...filteredAnimals];
+
+    animalsCopy.sort((a, b) => {
+      const priceA = Number(a.price || 0);
+      const priceB = Number(b.price || 0);
+
+      return sortOrder === "asc" ? priceA - priceB : priceB - priceA;
+    });
+
+    return animalsCopy;
+  }, [filteredAnimals, sortOrder]);
+
   // Calculate pagination
-  const totalPages = Math.ceil(filteredAnimals.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(sortedAnimals.length / ITEMS_PER_PAGE);
   const validPage = Math.max(1, Math.min(currentPage, totalPages || 1));
   const startIdx = (validPage - 1) * ITEMS_PER_PAGE;
   const endIdx = startIdx + ITEMS_PER_PAGE;
-  const paginatedAnimals = filteredAnimals.slice(startIdx, endIdx);
+  const paginatedAnimals = sortedAnimals.slice(startIdx, endIdx);
 
   function toggleCategory(type) {
     setSelectedCategories((prev) =>
@@ -132,7 +146,7 @@ export default function AllAnimalsPage() {
         backgroundSize: "40px 40px",
       }}
     >
-      <section className="mx-auto max-w-[1200px] px-4 py-6 md:py-10 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5">
+      <section className="mx-auto max-w-300 px-4 py-6 md:py-10 grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-5">
         <aside className="rounded-2xl border border-gray-200 bg-white/95 p-4 h-max">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-emerald-950">Filters</h2>
@@ -215,8 +229,13 @@ export default function AllAnimalsPage() {
             />
             <div className="flex items-center gap-2 text-xs">
               <span className="text-gray-400 font-semibold">SORT BY:</span>
-              <select className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700">
-                <option>Price Low to High</option>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
+              >
+                <option value="asc">Price Low to High</option>
+                <option value="desc">Price High to Low</option>
               </select>
             </div>
           </div>
