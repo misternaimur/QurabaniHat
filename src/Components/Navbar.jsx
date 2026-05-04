@@ -89,6 +89,11 @@ export default function Navbar() {
           <Link href="/all-animals" className={navClass("/all-animals")}>
             All Animals
           </Link>
+          {user ? (
+            <Link href="/details-page" className={navClass("/details-page")}>
+              Details Page
+            </Link>
+          ) : null}
           <a href="#" className="text-sm text-slate-600 hover:text-emerald-800">
             Livestock
           </a>

@@ -1,28 +1,26 @@
 /** @format */
 
 import { betterAuth } from "better-auth";
-import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { genericOAuth } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
+import { clientPromise, dbPromise } from "@/lib/mongodb";
 
-const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || "";
-const hasMongo = Boolean(mongoUri);
+const [client, db] = await Promise.all([clientPromise, dbPromise]);
+const hasMongo = Boolean(client && db);
 
-let client = null;
-let db = null;
-if (hasMongo) {
-  client = new MongoClient(mongoUri);
-  db = client.db();
-} else {
-  // Avoid throwing at import time so builds on platforms without env vars (e.g. Vercel) don't fail.
-  // At runtime, ensure MONGODB_URI (preferred) or MONGODB_URL is provided in the deployment environment.
+const authSecret = process.env.BETTER_AUTH_SECRET;
+
+if (!authSecret) {
   console.info(
-    "MongoDB URI not set; running Better Auth without MongoDB adapter.",
+    "BETTER_AUTH_SECRET not set; auth sessions may not work in production.",
   );
 }
 
 export const auth = betterAuth({
+  secret: authSecret,
+  baseURL:
+    process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
   database: hasMongo
     ? mongodbAdapter(db, {
         // Optional: if you don't provide a client, database transactions won't be enabled.
