@@ -57,6 +57,8 @@ export default function AllAnimalsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   useEffect(() => {
     let mounted = true;
@@ -105,6 +107,13 @@ export default function AllAnimalsPage() {
       return categoryMatch && searchMatch;
     });
   }, [animals, selectedCategories, search]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredAnimals.length / ITEMS_PER_PAGE);
+  const validPage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const startIdx = (validPage - 1) * ITEMS_PER_PAGE;
+  const endIdx = startIdx + ITEMS_PER_PAGE;
+  const paginatedAnimals = filteredAnimals.slice(startIdx, endIdx);
 
   function toggleCategory(type) {
     setSelectedCategories((prev) =>
@@ -225,25 +234,39 @@ export default function AllAnimalsPage() {
               </div>
             )}
 
-            {filteredAnimals.map((animal) => (
+            {paginatedAnimals.map((animal) => (
               <AnimalCard key={animal.id} animal={animal} />
             ))}
           </div>
 
           <div className="mt-8 flex items-center justify-center gap-2 text-sm">
-            <button className="h-8 w-8 rounded-full border border-gray-300 text-gray-400">
+            <button
+              onClick={() => setCurrentPage(Math.max(1, validPage - 1))}
+              disabled={validPage === 1}
+              className="h-8 w-8 rounded-full border border-gray-300 text-gray-400 disabled:opacity-50"
+            >
               ‹
             </button>
-            <button className="h-8 w-8 rounded-full bg-emerald-950 text-white">
-              1
-            </button>
-            <button className="h-8 w-8 rounded-full border border-gray-300">
-              2
-            </button>
-            <button className="h-8 w-8 rounded-full border border-gray-300">
-              3
-            </button>
-            <button className="h-8 w-8 rounded-full border border-gray-300">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`h-8 w-8 rounded-full ${
+                  validPage === page
+                    ? "bg-emerald-950 text-white"
+                    : "border border-gray-300 text-gray-700 hover:border-gray-400"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, validPage + 1))
+              }
+              disabled={validPage === totalPages}
+              className="h-8 w-8 rounded-full border border-gray-300 text-gray-400 disabled:opacity-50"
+            >
               ›
             </button>
           </div>
