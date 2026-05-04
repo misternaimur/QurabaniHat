@@ -41,17 +41,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const session = authClient.useSession();
-  const [showGoogle, setShowGoogle] = useState(true);
 
   useEffect(() => {
     if (session?.data?.user) {
       router.replace("/Profile");
     }
-
-    fetch("/api/auth/providers")
-      .then((r) => r.json())
-      .then((d) => setShowGoogle(Boolean(d?.google)))
-      .catch(() => setShowGoogle(false));
   }, [router, session]);
 
   function handleChange(event) {
@@ -194,25 +188,23 @@ export default function LoginPage() {
                 <span className="h-px flex-1 bg-gray-200" />
               </div>
 
-              {showGoogle && (
-                <button
-                  onClick={handleGoogleLogin}
-                  disabled={loading}
-                  className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-3 font-semibold text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <Spinner className="h-4 w-4 text-gray-700" />
-                      <span>Continuing...</span>
-                    </span>
-                  ) : (
-                    <>
-                      <span className="text-lg">G</span>
-                      Google
-                    </>
-                  )}
-                </button>
-              )}
+              <button
+                onClick={handleGoogleLogin}
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-3 font-semibold text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4 text-gray-700" />
+                    <span>Continuing...</span>
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-lg">G</span>
+                    Google
+                  </>
+                )}
+              </button>
 
               <p className="text-center text-sm text-gray-600">
                 Don&apos;t have an account?{" "}
