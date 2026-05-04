@@ -3,44 +3,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { authClient } from "@/lib/auth-client";
-
-function AuthIllustration() {
-  return (
-    <div className="hidden min-h-96 flex-col justify-between overflow-hidden rounded-3xl bg-linear-to-b from-emerald-900 to-emerald-800 p-8 text-white relative lg:flex">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.35),transparent_45%)] opacity-15" />
-      <div className="relative z-10 space-y-5">
-        <span className="inline-flex rounded-full bg-amber-400/20 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200">
-          Premium Livestock
-        </span>
-        <h2 className="max-w-md text-5xl font-extrabold leading-tight">
-          Create your account and get started.
-        </h2>
-        <p className="max-w-md text-sm leading-7 text-emerald-50/80">
-          Register once, then use your saved profile to explore animals, book
-          with confidence, and continue quickly with Google.
-        </p>
-      </div>
-
-      <div className="relative z-10 mt-auto rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-sm">
-        <div className="rounded-2xl bg-white/90 p-2">
-          <Image
-            src="https://images.pexels.com/photos/144240/goat-lamb-animal-nature-144240.jpeg?auto=compress&cs=tinysrgb&w=1200"
-            alt="Livestock"
-            width={1200}
-            height={800}
-            className="h-64 w-full rounded-xl object-cover"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function Spinner({ className = "h-4 w-4" }) {
   return (
@@ -73,7 +40,6 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    image: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
@@ -101,13 +67,20 @@ export default function RegisterPage() {
     event.preventDefault();
     setLoading(true);
     setErrorMessage("");
+    // client-side password length guard to avoid server rejection
+    if (!form.password || form.password.length < 8) {
+      const msg = "Password must be at least 8 characters.";
+      setErrorMessage(msg);
+      toast.error(msg);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await authClient.signUp.email({
         email: form.email,
         password: form.password,
         name: form.name,
-        image: form.image || undefined,
         fetchOptions: { throw: false },
       });
 
@@ -164,10 +137,8 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-[#f2f3ef] px-4 py-6 md:py-8">
-      <div className="mx-auto max-w-5xl">
-        <div className="grid overflow-hidden rounded-4xl bg-white shadow-2xl lg:grid-cols-2">
-          <AuthIllustration />
-
+      <div className="mx-auto max-w-md">
+        <div className="overflow-hidden rounded-4xl bg-white shadow-2xl">
           <div className="flex items-center justify-center p-6 md:p-10">
             <div className="w-full max-w-md space-y-6">
               <div>
@@ -213,19 +184,6 @@ export default function RegisterPage() {
                     placeholder="name@example.com"
                     className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none transition focus:border-emerald-800"
                     required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
-                    Photo URL (link)
-                  </label>
-                  <input
-                    name="image"
-                    value={form.image}
-                    onChange={handleChange}
-                    placeholder="https://..."
-                    className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 outline-none transition focus:border-emerald-800"
                   />
                 </div>
 
