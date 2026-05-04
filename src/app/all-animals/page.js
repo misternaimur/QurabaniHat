@@ -1,6 +1,8 @@
 /** @format */
 "use client";
 
+import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 const API_URL = "https://qurbani-hat-phi.vercel.app/Animal.json";
@@ -15,10 +17,12 @@ function AnimalCard({ animal }) {
   return (
     <article className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div className="relative h-40">
-        <img
+        <Image
           src={animal.image}
           alt={animal.name}
-          className="h-full w-full object-cover"
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 33vw"
         />
         <span className="absolute right-3 top-3 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-semibold text-emerald-950">
           ⊙ CERTIFIED
@@ -44,9 +48,12 @@ function AnimalCard({ animal }) {
 
         <p className="text-[11px] text-gray-500">⌖ {animal.location}</p>
 
-        <button className="mt-3 w-full rounded-xl border border-amber-700 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition">
+        <Link
+          href={`/all-animals/${animal.id}`}
+          className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-amber-700 py-2 text-sm font-semibold text-amber-700 hover:bg-amber-50 transition"
+        >
           Details →
-        </button>
+        </Link>
       </div>
     </article>
   );

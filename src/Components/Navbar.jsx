@@ -37,15 +37,18 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-4">
-          <a href="#" className="text-sm text-slate-600 hover:text-emerald-800">
+          <Link
+            href="/login"
+            className="text-sm text-slate-600 hover:text-emerald-800"
+          >
             Login
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            href="/register"
             className="inline-flex items-center gap-2 bg-emerald-800 text-white px-4 py-2 rounded-full shadow-md hover:bg-emerald-700 transition"
           >
             Register
-          </a>
+          </Link>
         </div>
       </nav>
     </header>
