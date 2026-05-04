@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import BannerImg from "../asset/Banner-image.png";
 
 const Banner = () => {
@@ -35,9 +36,12 @@ const Banner = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 pt-4">
-              <button className="bg-amber-300 text-emerald-900 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-amber-400 transition-colors">
+              <Link
+                href="/all-animals"
+                className="inline-flex items-center justify-center bg-amber-300 text-emerald-900 px-6 py-3 rounded-full font-semibold shadow-lg hover:bg-amber-400 transition-colors"
+              >
                 Browse Animals
-              </button>
+              </Link>
               <button className="bg-emerald-700/50 border border-emerald-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-emerald-600/50 transition-colors backdrop-blur-sm">
                 Learn More
               </button>

@@ -36,12 +36,12 @@ function Spinner({ className = "h-4 w-4" }) {
   );
 }
 
-function EditProfileForm({ user }) {
+function EditProfileForm({ user, isDemoMode }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    name: user.name || "",
-    image: user.image || "",
+    name: user?.name || "",
+    image: user?.image || "",
   });
 
   function handleChange(event) {
@@ -54,13 +54,39 @@ function EditProfileForm({ user }) {
     setLoading(true);
 
     try {
+      const name = form.name.trim();
+      const image = form.image.trim();
+
+      if (!name) {
+        throw new Error("Name is required");
+      }
+
+      if (isDemoMode) {
+        const updatedDemoUser = {
+          ...user,
+          name,
+          image,
+          isDemo: true,
+        };
+        localStorage.setItem(
+          "qurbani_demo_admin",
+          JSON.stringify(updatedDemoUser),
+        );
+        toast.success("Demo profile updated successfully");
+        router.replace("/Profile");
+        router.refresh();
+        return;
+      }
+
       const payload = {
-        name: form.name.trim(),
+        name,
       };
 
-      const image = form.image.trim();
       if (image) {
         payload.image = image;
+      } else {
+        // Keep parity with demo mode by allowing users to remove photo.
+        payload.image = "";
       }
 
       const response = await fetch("/api/profile/update", {
@@ -176,14 +202,25 @@ export default function EditProfilePage() {
   const router = useRouter();
   const session = authClient.useSession();
   const sessionData = session?.data;
-  const user = sessionData?.user;
+  let demoUser = null;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("qurbani_demo_admin");
+      demoUser = stored ? JSON.parse(stored) : null;
+    } catch {
+      demoUser = null;
+    }
+  }
+
+  const user = sessionData?.user || demoUser;
+  const isDemoMode = !sessionData?.user && Boolean(demoUser);
   const isSessionResolved = sessionData !== undefined;
 
   useEffect(() => {
-    if (isSessionResolved && !user) {
+    if (isSessionResolved && !sessionData?.user && !demoUser) {
       router.replace("/login");
     }
-  }, [isSessionResolved, router, user]);
+  }, [demoUser, isSessionResolved, router, sessionData?.user]);
 
   if (!isSessionResolved || !user) {
     return (
@@ -221,7 +258,7 @@ export default function EditProfilePage() {
           </Link>
         </div>
 
-        <EditProfileForm key={user.id} user={user} />
+        <EditProfileForm key={user.id} user={user} isDemoMode={isDemoMode} />
       </div>
 
       <ToastContainer position="top-right" autoClose={2500} hideProgressBar />
