@@ -1,48 +1,51 @@
 /** @format */
 
-import React from "react";
-import Image from "next/image";
-import Img01 from "../asset/Premium-img-01.png";
-import Img02 from "../asset/Premium-img-02.png";
-import Img03 from "../asset/Premium-img-03.png";
-import Img04 from "../asset/Premium-img-03.png";
+"use client";
 
-const items = [
-  {
-    title: "Shundar Sahiwal",
-    subtitle: "Premium Sahiwal Breed",
-    price: "৳1,20,000",
-    weight: "320kg",
-    location: "Pabna",
-    image: Img01,
-  },
-  {
-    title: "Royal Brahman",
-    subtitle: "Authentic Brahman",
-    price: "৳4,50,000",
-    weight: "650kg",
-    location: "Manikganj",
-    image: Img02,
-  },
-  {
-    title: "Dhaka Giant",
-    subtitle: "Mixed Breed",
-    price: "৳2,10,000",
-    weight: "480kg",
-    location: "Gazipur",
-    image: Img03,
-  },
-  {
-    title: "Kalo Manik",
-    subtitle: "Pure Black Bengal",
-    price: "৳42,000",
-    weight: "35kg",
-    location: "Kushtia",
-    image: Img04,
-  },
-];
+import React, { useEffect, useState } from "react";
+
+const API_URL = "https://qurbani-hat-phi.vercel.app/Animal.json";
+
+function formatPrice(price) {
+  const num = Number(price || 0);
+  return `৳${num.toLocaleString("en-IN")}`;
+}
 
 export default function FeaturedSelection() {
+  const [animals, setAnimals] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadAnimals() {
+      try {
+        const response = await fetch(API_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to fetch API data");
+        const data = await response.json();
+        if (mounted) setAnimals(Array.isArray(data) ? data.slice(0, 4) : []);
+      } catch {
+        try {
+          const fallbackResponse = await fetch("/Animal.json");
+          const fallbackData = await fallbackResponse.json();
+          if (mounted)
+            setAnimals(
+              Array.isArray(fallbackData) ? fallbackData.slice(0, 4) : [],
+            );
+        } catch {
+          if (mounted) setAnimals([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadAnimals();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <section className="py-12 bg-zinc-50">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -57,19 +60,28 @@ export default function FeaturedSelection() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {items.map((it, idx) => (
+          {loading && (
+            <div className="col-span-full text-center text-gray-500">
+              Loading featured animals...
+            </div>
+          )}
+
+          {!loading && animals.length === 0 && (
+            <div className="col-span-full text-center text-gray-500">
+              No animals available.
+            </div>
+          )}
+
+          {animals.map((animal) => (
             <div
-              key={idx}
+              key={animal.id}
               className="bg-white rounded-2xl shadow-lg overflow-hidden border"
             >
-              <div className="relative h-48 md:h-56">
-                <Image
-                  src={it.image}
-                  alt={it.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width:768px)100vw,25vw"
-                  priority={idx < 2}
+              <div className="relative h-48 md:h-56 bg-gray-200">
+                <img
+                  src={animal.image}
+                  alt={animal.name}
+                  className="w-full h-full object-cover"
                 />
                 <span className="absolute top-3 left-3 bg-amber-300 text-amber-900 text-xs font-semibold px-3 py-1 rounded-full">
                   CERTIFIED
@@ -80,58 +92,23 @@ export default function FeaturedSelection() {
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-semibold text-emerald-900">
-                      {it.title}
+                      {animal.name}
                     </h3>
-                    <p className="text-xs text-gray-400">{it.subtitle}</p>
+                    <p className="text-xs text-gray-400">{animal.breed}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-amber-500 font-bold">{it.price}</div>
+                    <div className="text-amber-500 font-bold">
+                      {formatPrice(animal.price)}
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-gray-400">
                   <div className="flex items-center gap-2">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 2v20"
-                        stroke="#9CA3AF"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M6 6v12"
-                        stroke="#9CA3AF"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span>{it.weight}</span>
+                    <span>△ {animal.weight} kg</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M12 2C8 2 4 5.2 4 9c0 6 8 13 8 13s8-7 8-13c0-3.8-4-7-8-7z"
-                        stroke="#9CA3AF"
-                        strokeWidth="1.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span>{it.location}</span>
+                    <span>⌖ {animal.location}</span>
                   </div>
                 </div>
 
