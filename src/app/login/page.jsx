@@ -37,14 +37,37 @@ function Spinner({ className = "h-4 w-4" }) {
 
 export default function LoginPage() {
   const router = useRouter();
+  const DEMO_ADMIN = {
+    name: "Admin",
+    email: "admin@qurbanihat.demo",
+    password: "Admin@12345",
+  };
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const session = authClient.useSession();
   const [showGoogle, setShowGoogle] = useState(true);
 
+  function setDemoAdminLocalSession() {
+    if (typeof window === "undefined") return;
+    const demoUser = {
+      id: "demo-admin",
+      name: DEMO_ADMIN.name,
+      email: DEMO_ADMIN.email,
+      role: "admin",
+      image: "",
+      isDemo: true,
+    };
+    localStorage.setItem("qurbani_demo_admin", JSON.stringify(demoUser));
+  }
+
   useEffect(() => {
-    if (session?.data?.user) {
+    const demoUser =
+      typeof window !== "undefined"
+        ? localStorage.getItem("qurbani_demo_admin")
+        : null;
+
+    if (session?.data?.user || demoUser) {
       router.replace("/Profile");
     }
 
@@ -118,6 +141,53 @@ export default function LoginPage() {
     }
   }
 
+  async function handleDemoAdminLogin() {
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      let signInRes = await authClient.signIn.email({
+        email: DEMO_ADMIN.email,
+        password: DEMO_ADMIN.password,
+        fetchOptions: { throw: false },
+      });
+
+      if (signInRes?.error) {
+        await authClient.signUp.email({
+          name: DEMO_ADMIN.name,
+          email: DEMO_ADMIN.email,
+          password: DEMO_ADMIN.password,
+          fetchOptions: { throw: false },
+        });
+
+        signInRes = await authClient.signIn.email({
+          email: DEMO_ADMIN.email,
+          password: DEMO_ADMIN.password,
+          fetchOptions: { throw: false },
+        });
+      }
+
+      if (
+        signInRes?.error ||
+        !(signInRes?.data?.session || signInRes?.data?.user)
+      ) {
+        setDemoAdminLocalSession();
+        toast.success("Demo admin logged in (local demo mode)");
+        router.push("/Profile");
+        return;
+      }
+
+      toast.success("Demo admin logged in");
+      router.push("/Profile");
+    } catch (error) {
+      const message = error?.message || "Demo admin login failed";
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f2f3ef] px-4 py-6 md:py-8">
       <div className="mx-auto max-w-md">
@@ -186,6 +256,28 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
+
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+                  Demo Admin
+                </p>
+                <p className="mt-2 text-sm text-amber-900">
+                  Email:{" "}
+                  <span className="font-semibold">{DEMO_ADMIN.email}</span>
+                </p>
+                <p className="text-sm text-amber-900">
+                  Password:{" "}
+                  <span className="font-semibold">{DEMO_ADMIN.password}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={handleDemoAdminLogin}
+                  disabled={loading}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-amber-950 transition hover:bg-amber-400 disabled:opacity-60"
+                >
+                  Login as Demo Admin
+                </button>
+              </div>
 
               <div className="flex items-center gap-4 text-xs uppercase tracking-[0.2em] text-gray-400">
                 <span className="h-px flex-1 bg-gray-200" />

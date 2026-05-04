@@ -26,7 +26,17 @@ export default function ProfilePage() {
   const router = useRouter();
   const session = authClient.useSession();
   const sessionData = session?.data;
-  const user = sessionData?.user;
+  let demoUser = null;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("qurbani_demo_admin");
+      demoUser = stored ? JSON.parse(stored) : null;
+    } catch {
+      demoUser = null;
+    }
+  }
+
+  const user = sessionData?.user || demoUser;
   const isSessionResolved = sessionData !== undefined;
 
   useEffect(() => {
