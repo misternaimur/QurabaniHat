@@ -1,36 +1,194 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🐄 QurbaniHat – Livestock Booking Platform
 
-## Getting Started
+🔗 **Live Site:** https://qurbani-hat-phi.vercel.app/
+💻 **GitHub Repository:** https://github.com/misternaimur/QurabaniHat
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 📌 Project Overview
+
+**QurbaniHat** is a modern livestock marketplace where users can explore animals (such as cows and goats) for Qurbani. Users can view detailed information and place bookings after authentication.
+
+---
+
+## 🎯 Project Purpose
+
+The goal of this project is to build a fully responsive and user-friendly livestock booking platform with authentication, dynamic routing, and a clean UI/UX.
+
+---
+
+## ✨ Key Features
+
+* 🔐 User Authentication (Email/Password + Google Login)
+* 🐐 Browse Animals for Qurbani
+* 📊 Sort Animals by Price
+* 📄 Detailed Animal Information Page
+* 📝 Booking Form (with validation & toast notification)
+* 👤 User Profile & Update Information Feature
+* 📱 Fully Responsive (Mobile, Tablet, Desktop)
+* ⚡ Fast Performance with Next.js 16
+* 🔔 Toast Notifications
+* ⏳ Loading States
+* ❌ Custom Not Found Page
+
+---
+
+## 🧱 Layout Structure
+
+### 🔝 Navbar
+
+* Logo
+* Navigation Links: Home, All Animals
+* Auth State:
+
+  * Logged In → Avatar + Logout
+  * Logged Out → Login & Register
+
+### 🔻 Footer
+
+* Contact Info
+* Social Links
+* About Section
+
+---
+
+## 🐄 Animal Data
+
+Static JSON data with fields:
+
+* id
+* name
+* type
+* breed
+* price
+* weight
+* age
+* location
+* description
+* image
+* category
+
+---
+
+## 🏠 Pages & Functionality
+
+### Home Page
+
+* Hero Section with CTA
+* Featured Animals (4 items)
+* Qurbani Tips Section
+* Top Breeds Section
+
+### All Animals Page
+
+* Animal Cards
+* Sort by Price
+* Details Button
+
+### Animal Details Page
+
+* Full Animal Info
+* Booking Form (Login Required)
+* Success Toast (No DB Save)
+
+---
+
+## 🔐 Authentication System
+
+### Login
+
+* Email & Password
+* Google Login
+* Redirect to Home after success
+* Error handling with toast
+
+### Register
+
+* Name, Email, Photo URL, Password
+* Redirect to Login after success
+* Google Signup option
+
+---
+
+## 👤 My Profile (Challenge Feature)
+
+* View user info (Name, Email, Photo)
+* Update Profile:
+
+  * Name
+  * Image
+* Uses Better Auth update system
+
+---
+
+## 📦 NPM Packages Used
+
+* next
+* react
+* react-dom
+* better-auth
+* mongodb
+* react-hot-toast
+* lottie-react / animate.css (used for UI animation)
+
+---
+
+## 🔐 Environment Variables
+
+Create a `.env.local` file:
+
+```env
+MONGODB_URI=your_mongodb_connection_string
+BETTER_AUTH_SECRET=your_secret_key
+BETTER_AUTH_URL=https://qurbani-hat-phi.vercel.app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 🚀 Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* Hosted on **Vercel**
+* Supports dynamic routes without reload errors
+* Optimized production build
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## ⚙️ Installation & Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+git clone https://github.com/misternaimur/QurabaniHat.git
+cd QurabaniHat
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## ⚠️ Important Notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* Booking data is not stored in database (as per requirements)
+* Authentication required for booking
+* Environment variables must be set for production
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🧠 Challenges Faced
+
+* Better Auth setup with Next.js 16
+* Environment variable configuration on Vercel
+* Dynamic routing without reload errors
+* Responsive UI design across all devices
+
+---
+
+## 📬 Contact
+
+**LinkedIn:** https://www.linkedin.com/in/misternaimur/
+
+---
+
+## ⭐ Final Words
+
+This project demonstrates full-stack development concepts including authentication, dynamic routing, state management, and responsive UI design using modern tools like Next.js and Better Auth.
+
+---
