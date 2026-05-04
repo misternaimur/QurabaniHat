@@ -104,23 +104,11 @@ export default function RegisterPage() {
   async function handleGoogleRegister() {
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/sign-in/oauth2", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          providerId: "google",
-          callbackURL: "/",
-          requestSignUp: true,
-          disableRedirect: true,
-        }),
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+        requestSignUp: true,
       });
-
-      const data = await response.json();
-      if (!response.ok || !data?.url) {
-        throw new Error(data?.message || "Google registration failed");
-      }
-
-      window.location.href = data.url;
     } catch (error) {
       const message = error.message || "Google registration failed";
       setErrorMessage(message);

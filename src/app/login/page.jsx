@@ -91,22 +91,10 @@ export default function LoginPage() {
   async function handleGoogleLogin() {
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/sign-in/oauth2", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          providerId: "google",
-          callbackURL: "/Profile",
-          disableRedirect: true,
-        }),
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/Profile",
       });
-
-      const data = await response.json();
-      if (!response.ok || !data?.url) {
-        throw new Error(data?.message || "Google login failed");
-      }
-
-      window.location.href = data.url;
     } catch (error) {
       toast.error(error?.message || "Google login failed");
       setLoading(false);

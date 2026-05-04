@@ -2,7 +2,6 @@
 
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { genericOAuth } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 import { clientPromise, dbPromise } from "@/lib/mongodb";
 
@@ -10,6 +9,12 @@ const [client, db] = await Promise.all([clientPromise, dbPromise]);
 const hasMongo = Boolean(client && db);
 
 const authSecret = process.env.BETTER_AUTH_SECRET;
+const isDevelopment = process.env.NODE_ENV !== "production";
+const authBaseURL = isDevelopment
+  ? "http://localhost:3000"
+  : process.env.BETTER_AUTH_URL ||
+    process.env.NEXT_PUBLIC_BETTER_AUTH_URL ||
+    "http://localhost:3000";
 
 if (!authSecret) {
   console.info(
@@ -19,35 +24,23 @@ if (!authSecret) {
 
 export const auth = betterAuth({
   secret: authSecret,
-  baseURL:
-    process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
+  baseURL: authBaseURL,
   database: hasMongo
     ? mongodbAdapter(db, {
         // Optional: if you don't provide a client, database transactions won't be enabled.
         client,
       })
     : undefined,
-  plugins: [
-    nextCookies(),
-    genericOAuth({
-      config: process.env.GOOGLE_CLIENT_ID
-        ? [
-            {
-              providerId: "google",
-              clientId: process.env.GOOGLE_CLIENT_ID,
-              clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-              scopes: ["openid", "email", "profile"],
-              responseType: "code",
-              pkce: true,
-              authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-              tokenUrl: "https://oauth2.googleapis.com/token",
-              userInfoUrl: "https://openidconnect.googleapis.com/v1/userinfo",
-              issuer: "https://accounts.google.com",
-            },
-          ]
-        : [],
-    }),
-  ],
+  plugins: [nextCookies()],
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      scope: ["openid", "email", "profile"],
+      prompt: "select_account",
+      accessType: "offline",
+    },
+  },
   emailAndPassword: {
     enabled: true,
   },
