@@ -6,18 +6,19 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { genericOAuth } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
 
-const hasMongo = Boolean(process.env.MONGODB_URI);
+const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_URL || "";
+const hasMongo = Boolean(mongoUri);
 
 let client = null;
 let db = null;
 if (hasMongo) {
-  client = new MongoClient(process.env.MONGODB_URI);
+  client = new MongoClient(mongoUri);
   db = client.db();
 } else {
   // Avoid throwing at import time so builds on platforms without env vars (e.g. Vercel) don't fail.
-  // At runtime, ensure MONGODB_URI is provided in the deployment environment.
+  // At runtime, ensure MONGODB_URI (preferred) or MONGODB_URL is provided in the deployment environment.
   console.info(
-    "MONGODB_URI not set; running Better Auth without MongoDB adapter.",
+    "MongoDB URI not set; running Better Auth without MongoDB adapter.",
   );
 }
 
