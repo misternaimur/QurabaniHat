@@ -3,11 +3,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import dynamic from "next/dynamic";
+import { authClient } from "@/lib/auth-client";
 
 function AuthIllustration() {
   return (
@@ -28,9 +29,11 @@ function AuthIllustration() {
 
       <div className="relative z-10 mt-auto rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-sm">
         <div className="rounded-2xl bg-white/90 p-2">
-          <img
+          <Image
             src="https://images.pexels.com/photos/33550/bull-texas-longhorn-animal-horn.jpg?auto=compress&cs=tinysrgb&w=1200"
             alt="Livestock"
+            width={1200}
+            height={800}
             className="h-64 w-full rounded-xl object-cover"
           />
         </div>
@@ -39,24 +42,44 @@ function AuthIllustration() {
   );
 }
 
+function Spinner({ className = "h-4 w-4" }) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      ></path>
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [session, setSession] = useState(null);
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const session = authClient.useSession();
 
   useEffect(() => {
-    setMounted(true);
-    if (typeof window === "undefined") return;
-
-    import("@/lib/auth-client").then(({ authClient }) => {
-      const unsub = authClient.useSession();
-      if (unsub?.data?.user) {
-        router.replace("/");
-      }
-    });
-  }, [router]);
+    if (session?.data?.user) {
+      router.replace("/");
+    }
+  }, [router, session]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -66,9 +89,9 @@ export default function LoginPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
     try {
-      const { authClient } = await import("@/lib/auth-client");
       const { data, error } = await authClient.signIn.email({
         email: form.email,
         password: form.password,
@@ -76,6 +99,7 @@ export default function LoginPage() {
       });
 
       if (error) {
+        setErrorMessage(error.message || "Invalid email or password.");
         toast.error(error.message || "Login failed");
         return;
       }
@@ -83,8 +107,12 @@ export default function LoginPage() {
       if (data?.session || data?.user) {
         toast.success("Login successful");
         router.push("/");
+      } else {
+        setErrorMessage("Login failed. Please try again.");
+        toast.error("Login failed");
       }
-    } catch {
+    } catch (err) {
+      setErrorMessage("An unexpected error occurred.");
       toast.error("Login failed");
     } finally {
       setLoading(false);
@@ -132,6 +160,15 @@ export default function LoginPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {errorMessage && (
+                  <div className="rounded-xl bg-red-50 p-4 text-sm font-medium text-red-600 border border-red-100 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[18px]">
+                      error
+                    </span>
+                    {errorMessage}
+                  </div>
+                )}
+
                 <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                     Email Address
@@ -167,7 +204,14 @@ export default function LoginPage() {
                   disabled={loading}
                   className="w-full rounded-2xl bg-emerald-900 px-5 py-3.5 font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
                 >
-                  {loading ? "Logging in..." : "Login"}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Spinner className="h-4 w-4 text-white" />
+                      <span>Logging in...</span>
+                    </span>
+                  ) : (
+                    "Login"
+                  )}
                 </button>
               </form>
 
@@ -182,8 +226,17 @@ export default function LoginPage() {
                 disabled={loading}
                 className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-3 font-semibold text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
               >
-                <span className="text-lg">G</span>
-                Google
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4 text-gray-700" />
+                    <span>Continuing...</span>
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-lg">G</span>
+                    Google
+                  </>
+                )}
               </button>
 
               <p className="text-center text-sm text-gray-600">

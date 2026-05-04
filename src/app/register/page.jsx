@@ -3,16 +3,73 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import dynamic from "next/dynamic";
+import { authClient } from "@/lib/auth-client";
+
+function AuthIllustration() {
+  return (
+    <div className="hidden min-h-96 flex-col justify-between overflow-hidden rounded-3xl bg-linear-to-b from-emerald-900 to-emerald-800 p-8 text-white relative lg:flex">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.35),transparent_45%)] opacity-15" />
+      <div className="relative z-10 space-y-5">
+        <span className="inline-flex rounded-full bg-amber-400/20 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200">
+          Premium Livestock
+        </span>
+        <h2 className="max-w-md text-5xl font-extrabold leading-tight">
+          Create your account and get started.
+        </h2>
+        <p className="max-w-md text-sm leading-7 text-emerald-50/80">
+          Register once, then use your saved profile to explore animals, book
+          with confidence, and continue quickly with Google.
+        </p>
+      </div>
+
+      <div className="relative z-10 mt-auto rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-sm">
+        <div className="rounded-2xl bg-white/90 p-2">
+          <Image
+            src="https://images.pexels.com/photos/144240/goat-lamb-animal-nature-144240.jpeg?auto=compress&cs=tinysrgb&w=1200"
+            alt="Livestock"
+            width={1200}
+            height={800}
+            className="h-64 w-full rounded-xl object-cover"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Spinner({ className = "h-4 w-4" }) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
+  );
+}
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-  const [session, setSession] = useState(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -20,18 +77,14 @@ export default function RegisterPage() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const session = authClient.useSession();
 
   useEffect(() => {
-    setMounted(true);
-    if (typeof window === "undefined") return;
-
-    import("@/lib/auth-client").then(({ authClient }) => {
-      const unsub = authClient.useSession();
-      if (unsub?.data?.user) {
-        router.replace("/");
-      }
-    });
-  }, [router]);
+    if (session?.data?.user) {
+      router.replace("/");
+    }
+  }, [router, session]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -41,9 +94,9 @@ export default function RegisterPage() {
   async function handleSubmit(event) {
     event.preventDefault();
     setLoading(true);
+    setErrorMessage("");
 
     try {
-      const { authClient } = await import("@/lib/auth-client");
       const { data, error } = await authClient.signUp.email({
         email: form.email,
         password: form.password,
@@ -53,15 +106,22 @@ export default function RegisterPage() {
       });
 
       if (error) {
-        toast.error(error.message || "Registration failed");
+        const message = error.message || "Registration failed";
+        setErrorMessage(message);
+        toast.error(message);
         return;
       }
 
-      if (data?.user) {
+      if (data?.user || data?.session) {
         toast.success("Registration successful. Please login.");
         router.push("/login");
+        return;
       }
+
+      setErrorMessage("Registration failed. Please try again.");
+      toast.error("Registration failed. Please try again.");
     } catch {
+      setErrorMessage("Registration failed. Please try again.");
       toast.error("Registration failed");
     } finally {
       setLoading(false);
@@ -89,7 +149,9 @@ export default function RegisterPage() {
 
       window.location.href = data.url;
     } catch (error) {
-      toast.error(error.message || "Google registration failed");
+      const message = error.message || "Google registration failed";
+      setErrorMessage(message);
+      toast.error(message);
       setLoading(false);
     }
   }
@@ -98,31 +160,7 @@ export default function RegisterPage() {
     <main className="min-h-screen bg-[#f2f3ef] px-4 py-6 md:py-8">
       <div className="mx-auto max-w-5xl">
         <div className="grid overflow-hidden rounded-4xl bg-white shadow-2xl lg:grid-cols-2">
-          <div className="hidden lg:flex flex-col justify-between rounded-3xl bg-linear-to-b from-emerald-900 to-emerald-800 p-8 text-white relative overflow-hidden min-h-96">
-            <div className="absolute inset-0 opacity-15 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.35),transparent_45%)]" />
-            <div className="relative z-10 space-y-5">
-              <span className="inline-flex rounded-full bg-amber-400/20 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-200">
-                Premium Livestock
-              </span>
-              <h2 className="max-w-md text-5xl font-extrabold leading-tight">
-                Start Your Journey.
-              </h2>
-              <p className="max-w-md text-sm leading-7 text-emerald-50/80">
-                Create your account to book premium animals with confidence and
-                keep your tradition organized.
-              </p>
-            </div>
-
-            <div className="relative z-10 mt-auto rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur-sm">
-              <div className="rounded-2xl bg-white/90 p-2">
-                <img
-                  src="https://images.pexels.com/photos/144240/goat-lamb-animal-nature-144240.jpeg?auto=compress&cs=tinysrgb&w=1200"
-                  alt="Livestock"
-                  className="h-64 w-full rounded-xl object-cover"
-                />
-              </div>
-            </div>
-          </div>
+          <AuthIllustration />
 
           <div className="flex items-center justify-center p-6 md:p-10">
             <div className="w-full max-w-md space-y-6">
@@ -134,6 +172,15 @@ export default function RegisterPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
+                {errorMessage && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 p-4 text-sm font-medium text-red-600">
+                    <span className="material-symbols-outlined text-[18px]">
+                      error
+                    </span>
+                    {errorMessage}
+                  </div>
+                )}
+
                 <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">
                     Name
@@ -196,7 +243,14 @@ export default function RegisterPage() {
                   disabled={loading}
                   className="w-full rounded-2xl bg-emerald-900 px-5 py-3.5 font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
                 >
-                  {loading ? "Registering..." : "Register"}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <Spinner className="h-4 w-4 text-white" />
+                      <span>Registering...</span>
+                    </span>
+                  ) : (
+                    "Register"
+                  )}
                 </button>
               </form>
 
@@ -211,8 +265,17 @@ export default function RegisterPage() {
                 disabled={loading}
                 className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-3 font-semibold text-gray-700 transition hover:border-emerald-300 hover:bg-emerald-50 disabled:opacity-60"
               >
-                <span className="text-lg">G</span>
-                Google
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4 text-gray-700" />
+                    <span>Continuing...</span>
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-lg">G</span>
+                    Google
+                  </>
+                )}
               </button>
 
               <p className="text-center text-sm text-gray-600">
