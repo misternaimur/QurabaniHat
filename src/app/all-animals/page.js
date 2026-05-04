@@ -1,82 +1,24 @@
 /** @format */
+"use client";
 
-import Image from "next/image";
-import CowImg from "@/asset/Premium-img-01.png";
-import BrahmanImg from "@/asset/Premium-img-02.png";
-import GoatImg from "@/asset/Premium-img-03.png";
+import { useEffect, useMemo, useState } from "react";
 
-const animals = [
-  {
-    id: 1,
-    name: "Royal Brahman Bull",
-    breed: "Pure Breed Brahman",
-    weight: "520 kg",
-    age: "3.5 Years",
-    location: "Dhaka, Bangladesh",
-    price: "৳320,000",
-    image: BrahmanImg,
-  },
-  {
-    id: 2,
-    name: "Sultan Jamunapari",
-    breed: "Jamunapari Goat",
-    weight: "65 kg",
-    age: "1.8 Years",
-    location: "Sylhet, Bangladesh",
-    price: "৳45,000",
-    image: GoatImg,
-  },
-  {
-    id: 3,
-    name: "Imperial Sahiwal",
-    breed: "Deshi Sahiwal",
-    weight: "480 kg",
-    age: "3 Years",
-    location: "Rajshahi, Bangladesh",
-    price: "৳280,000",
-    image: CowImg,
-  },
-  {
-    id: 4,
-    name: "Premium Merino",
-    breed: "Australian Merino",
-    weight: "45 kg",
-    age: "1.5 Years",
-    location: "Chittagong, Bangladesh",
-    price: "৳35,000",
-    image: CowImg,
-  },
-  {
-    id: 5,
-    name: "Holstein Hybrid",
-    breed: "Dairy/Meat Cross",
-    weight: "380 kg",
-    age: "2.2 Years",
-    location: "Bogura, Bangladesh",
-    price: "৳190,000",
-    image: BrahmanImg,
-  },
-  {
-    id: 6,
-    name: "Elite Dorset",
-    breed: "Pure Breed Dorset",
-    weight: "55 kg",
-    age: "2 Years",
-    location: "Comilla, Bangladesh",
-    price: "৳42,000",
-    image: GoatImg,
-  },
-];
+const API_URL = "https://qurbani-hat-phi.vercel.app/Animal.json";
+const CATEGORY_OPTIONS = ["Cow", "Goat", "Sheep", "Camel"];
+
+function formatPrice(price) {
+  const num = Number(price || 0);
+  return `৳${num.toLocaleString("en-IN")}`;
+}
 
 function AnimalCard({ animal }) {
   return (
     <article className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div className="relative h-40">
-        <Image
+        <img
           src={animal.image}
           alt={animal.name}
-          fill
-          className="object-cover"
+          className="h-full w-full object-cover"
         />
         <span className="absolute right-3 top-3 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-semibold text-emerald-950">
           ⊙ CERTIFIED
@@ -89,15 +31,15 @@ function AnimalCard({ animal }) {
             {animal.name}
           </h3>
           <p className="text-2xl font-bold text-amber-700 whitespace-nowrap">
-            {animal.price}
+            {formatPrice(animal.price)}
           </p>
         </div>
 
         <p className="text-xs text-gray-500">{animal.breed}</p>
 
         <div className="flex items-center gap-5 text-[11px] text-gray-500">
-          <span>△ {animal.weight}</span>
-          <span>◷ {animal.age}</span>
+          <span>△ {animal.weight} kg</span>
+          <span>◷ {animal.age} Years</span>
         </div>
 
         <p className="text-[11px] text-gray-500">⌖ {animal.location}</p>
@@ -111,6 +53,67 @@ function AnimalCard({ animal }) {
 }
 
 export default function AllAnimalsPage() {
+  const [animals, setAnimals] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadAnimals() {
+      try {
+        const response = await fetch(API_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error("Failed to fetch API data");
+        const data = await response.json();
+        if (mounted) setAnimals(Array.isArray(data) ? data : []);
+      } catch {
+        // Fallback to local static JSON when remote API fails.
+        try {
+          const fallbackResponse = await fetch("/Animal.json");
+          const fallbackData = await fallbackResponse.json();
+          if (mounted)
+            setAnimals(Array.isArray(fallbackData) ? fallbackData : []);
+        } catch {
+          if (mounted) setAnimals([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    loadAnimals();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filteredAnimals = useMemo(() => {
+    const term = search.trim().toLowerCase();
+
+    return animals.filter((animal) => {
+      const categoryMatch =
+        selectedCategories.length === 0 ||
+        selectedCategories.includes(animal.type);
+
+      const searchMatch =
+        term.length === 0 ||
+        `${animal.name} ${animal.breed} ${animal.location}`
+          .toLowerCase()
+          .includes(term);
+
+      return categoryMatch && searchMatch;
+    });
+  }, [animals, selectedCategories, search]);
+
+  function toggleCategory(type) {
+    setSelectedCategories((prev) =>
+      prev.includes(type)
+        ? prev.filter((item) => item !== type)
+        : [...prev, type],
+    );
+  }
+
   return (
     <main
       className="bg-zinc-100 min-h-screen pb-14"
@@ -133,15 +136,16 @@ export default function AllAnimalsPage() {
                 CATEGORIES
               </h3>
               <div className="space-y-2 text-gray-700">
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Cows
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Goats
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" /> Sheep
-                </label>
+                {CATEGORY_OPTIONS.map((type) => (
+                  <label key={type} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(type)}
+                      onChange={() => toggleCategory(type)}
+                    />
+                    {type === "Cow" ? "Cows" : `${type}s`}
+                  </label>
+                ))}
               </div>
             </div>
 
@@ -193,9 +197,13 @@ export default function AllAnimalsPage() {
 
         <div>
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="w-full md:max-w-md rounded-2xl border border-gray-200 bg-white px-4 py-2 text-gray-500">
-              Search for premium bulls, goats...
-            </div>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search for premium bulls, goats..."
+              className="w-full md:max-w-md rounded-2xl border border-gray-200 bg-white px-4 py-2 text-gray-600"
+            />
             <div className="flex items-center gap-2 text-xs">
               <span className="text-gray-400 font-semibold">SORT BY:</span>
               <select className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700">
@@ -205,7 +213,19 @@ export default function AllAnimalsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {animals.map((animal) => (
+            {loading && (
+              <div className="col-span-full rounded-xl border border-gray-200 bg-white p-5 text-gray-500">
+                Loading animals...
+              </div>
+            )}
+
+            {!loading && filteredAnimals.length === 0 && (
+              <div className="col-span-full rounded-xl border border-gray-200 bg-white p-5 text-gray-500">
+                No animals found for selected category.
+              </div>
+            )}
+
+            {filteredAnimals.map((animal) => (
               <AnimalCard key={animal.id} animal={animal} />
             ))}
           </div>
