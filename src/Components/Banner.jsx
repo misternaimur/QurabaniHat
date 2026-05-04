@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import BannerImg from "../asset/Banner-image.png";
 
 const Banner = () => {
   return (
@@ -47,10 +48,10 @@ const Banner = () => {
           <div className="relative">
             <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10 aspect-[4/3]">
               <Image
-                src="/Banner-image.jpg"
+                src={BannerImg}
                 alt="Livestock farming - Qurbani animals"
                 fill
-                className="w-full h-full object-cover"
+                className="object-cover"
                 priority
               />
             </div>
